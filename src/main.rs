@@ -1,5 +1,6 @@
-mod definition;
 mod interface;
+mod r#struct;
+mod definition;
 
 use std::io::prelude::*;
 use std::net::TcpListener;
