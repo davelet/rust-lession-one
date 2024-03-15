@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use crate::definition::SomethingOrNothing::{Nothing, Something};
 
 pub(crate) enum SomethingOrNothing<T> {
@@ -5,7 +6,7 @@ pub(crate) enum SomethingOrNothing<T> {
     Nothing,
 }
 
-impl<T> SomethingOrNothing<T> {
+impl<T: Display> SomethingOrNothing<T> {
     pub fn new(o: Option<T>) -> Self {
         match o {
             None => { Nothing }
@@ -26,13 +27,20 @@ impl<T> SomethingOrNothing<T> {
             Nothing => { panic!("no value") }
         }
     }
-}
 
-impl<T: Clone> Clone for SomethingOrNothing<T> {
-    fn clone(&self) -> Self {
-        match *self {
-            Something(ref v) => { Something(v.clone()) }
-            Nothing => { Nothing }
+    pub fn print(&self) {
+        match self {
+            Something(n) => {println!("{} is least", n)}
+            Nothing => { println!("none") }
         }
     }
 }
+
+// impl<T: Clone> Clone for SomethingOrNothing<T> {
+//     fn clone(&self) -> Self {
+//         match *self {
+//             Something(ref v) => { Something(v.clone()) }
+//             Nothing => { Nothing }
+//         }
+//     }
+// }

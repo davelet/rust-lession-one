@@ -1,3 +1,3 @@
-pub trait Minimum : Copy {
-    fn compare(&self, s: Self) -> Self;
+pub trait Minimum {
+    fn compare<'a>(&'a self, s:&'a Self) -> &'a Self;
 }
