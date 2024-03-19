@@ -1,12 +1,28 @@
 use std::cmp;
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::Add;
-use crate::interface::Minimum;
+use crate::interface::{Action, Minimum};
 
 // #[derive(Clone)]
 pub struct BigInteger {
     data: Vec<u8>,
 }
+
+// struct Iter<'a> {
+//     num: &'a BigInteger,
+//     idx: usize,
+// }
+
+// impl<'a> Iterator for Iter<'a> {
+//     type Item = u8;
+//
+//     fn next(&mut self) -> Option<Self::Item> {
+//         if self.idx == 0 { None } else {
+//             self.idx = self.idx - 1;
+//             Some(self.num.data[self.idx])
+//         }
+//     }
+// }
 
 impl BigInteger {
     pub(crate) fn print(&self) {
@@ -18,6 +34,10 @@ impl BigInteger {
         }
         println!()
     }
+
+    // fn iter(&self) -> Iter {
+    //     Iter { num: self, idx: self.data.len() }
+    // }
 }
 
 impl Display for BigInteger {
@@ -99,10 +119,10 @@ impl Minimum for BigInteger {
     }
 }
 
-impl<'a,'b> Add<&'a BigInteger> for &'b BigInteger {
-    type Output = &'a BigInteger;
+impl<'a> Add<&'a BigInteger> for &'a BigInteger {
+    type Output = BigInteger;
 
-    fn add(self, rhs: &'a Self) -> Self::Output {
+    fn add(self, rhs: &'a BigInteger) -> Self::Output {
         let max_len = cmp::max(self.data.len(), rhs.data.len());
         let mut res_vec: Vec<u8> = Vec::with_capacity(max_len + 1);
         let mut carry_bit = 0_u8;
@@ -119,12 +139,25 @@ impl<'a,'b> Add<&'a BigInteger> for &'b BigInteger {
     }
 }
 
-#[test]
-fn addit() {
-    let a = BigInteger::from_vec(vec![7, 3, 1]);
-    let b = BigInteger::from_vec(vec![3, 9, 2, 8]);
-    let integer = a + b;
-    println!("{} + {} = {}", a, b, integer);
+#[cfg(test)]
+mod tests {
+    use crate::r#struct::BigInteger;
+
+    #[test]
+    fn addit() {
+        let a = &BigInteger::from_vec(vec![7, 3, 1]);
+        let b = &BigInteger::from_vec(vec![3, 9, 2, 8]);
+        let integer = a + b;
+        println!("{} + {} = {}", a, b, integer);
+        for d in integer.iter() {
+            print!("{}", d)
+        }
+        println!();
+        let mut iter = integer.iter();
+        while let Some(d) = iter.next() {
+            print!("{}", d)
+        }
+    }
 }
 
 impl PartialEq for BigInteger {
@@ -136,5 +169,65 @@ impl PartialEq for BigInteger {
 impl Debug for BigInteger {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.data.fmt(f)
+    }
+}
+
+impl BigInteger {
+    pub(crate) fn act<A: Action>(&self, mut a: A) {
+        for digit in self {
+            a.do_action(digit)
+        }
+    }
+
+    pub fn iter(&self) -> DigitIter {
+        DigitIter::default(self)
+    }
+
+    pub fn act_fn<A: FnMut(u8)>(&self, mut a: A) {
+        for d in self {
+            a(d)
+        }
+    }
+}
+
+pub struct PrintEachDigit {
+    pub(crate) prefix: String,
+}
+
+impl Action for PrintEachDigit {
+    fn do_action(&mut self, d: u8) {
+        println!("{}{}", self.prefix, d);
+    }
+}
+impl<'a, 'b> IntoIterator for &'a BigInteger {
+    type Item = u8;
+    type IntoIter = DigitIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+pub struct DigitIter<'a> {
+    int: &'a BigInteger,
+    size: usize,
+}
+
+impl<'a> DigitIter<'a> {
+    pub fn default(b: &'a BigInteger) -> Self {
+        DigitIter { int: b, size: b.data.len() }
+    }
+}
+
+impl<'a> Iterator for DigitIter<'a> {
+    type Item = u8;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.size == 0 {
+            None
+        } else {
+            self.size = self.size - 1;
+            Some(self.int.data[self.size])
+        }
     }
 }
