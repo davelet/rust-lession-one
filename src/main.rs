@@ -7,6 +7,7 @@ use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
 use std::fs;
+use crate::closure::ClosureStorage;
 use crate::definition::SomethingOrNothing::{self, *, Nothing, Something};
 use crate::interface::Minimum;
 use crate::r#struct::{BigInteger, PrintEachDigit};
@@ -30,17 +31,7 @@ fn main() {
     // println!("1");
     let mut vec = vec![18, 5, 7, 9, 27];
     inc_vec(&vec, 3, 20);
-    // vec = vec![2];
-    // let m = vec_min(&mut vec);
-    // m.print();
-    // vec_min(&mut vec).print();
-    // vec.push(3);
-    // println!("{}", vec.len());
-    //
     let mut bigs: Vec<BigInteger> = vec![/*BigInteger::new(3),*/ BigInteger::from_vec(vec![5,2, 1]), BigInteger::from_vec(vec![4, 1,2]), BigInteger::default(), BigInteger::new(8)];
-    // vec_min(&mut bigs).print();
-    let normal_string = "This is a normal string with an escaped backslash: \\";
-    let raw_string = r"This is a raw string with a backslash: \";
     let raw_string_with_hash = r###"This is another raw string-------------# with a backslash: \ and a doubl"e quote:# ""###;
     // println!("{}",raw_string_with_hash);
 
@@ -56,6 +47,21 @@ fn main() {
     println!("{}", raw_string_with_hash);
     print_digits_in_big_int(&bigs[0], "she".to_string());
     print_int_closure(&bigs[0], "she:".to_string());
+
+    let mut  cs = ClosureStorage::default();
+    cs.register(Box::new(|a| println!("第一个回调 {}", a)));
+    cs.call(100);
+    cs.register(Box::new(|a| println!("第2个回调 {}", a)));
+
+    {
+        let mut i = 0;
+        cs.register(move |b| {
+            i = i + 1;
+            println!("2 {} {}", i, b)
+        })
+    }
+    cs.call(200);
+    cs.call(300);
 }
 
 fn print_digits_in_big_int(int: &BigInteger, pre: String) {
