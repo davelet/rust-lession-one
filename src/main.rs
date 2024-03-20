@@ -3,10 +3,12 @@ mod r#struct;
 mod definition;
 mod closure;
 
+use std::cell::Cell;
 use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
 use std::fs;
+use std::rc::Rc;
 use crate::closure::ClosureStorage;
 use crate::definition::SomethingOrNothing::{self, *, Nothing, Something};
 use crate::interface::Minimum;
@@ -49,19 +51,25 @@ fn main() {
     print_int_closure(&bigs[0], "she:".to_string());
 
     let mut  cs = ClosureStorage::default();
-    cs.register(Box::new(|a| println!("第一个回调 {}", a)));
+    // cs.register(Box::new(|a| println!("第一个回调 {}", a)));
     cs.call(100);
-    cs.register(Box::new(|a| println!("第2个回调 {}", a)));
+    // cs.register(Box::new(|a| println!("第2个回调 {}", a)));
 
-    {
-        let mut i = 0;
-        cs.register(move |b| {
-            i = i + 1;
-            println!("2 {} {}", i, b)
-        })
-    }
     cs.call(200);
+    {
+        let mut i: Cell<i32> = Cell::new(0);
+        cs.register(Rc::new(move |b| {
+            i.set(i.get() + 1);
+            println!("第三个回调 {} {}", i.get(), b)
+        }));
+        i = Cell::new(0);
+        cs.register_generic(move |b| {
+            i.set(i.get() + 1);
+            println!("第si个回调 {} {}", i.get(), b)
+        });
+    }
     cs.call(300);
+    cs.clone().call(400);
 }
 
 fn print_digits_in_big_int(int: &BigInteger, pre: String) {
