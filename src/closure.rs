@@ -1,7 +1,8 @@
+use std::cell::RefCell;
 use std::rc::Rc;
 
 pub struct ClosureStorage {
-    callbacks: Vec<Rc<dyn Fn(i32)>>,
+    callbacks: Vec<Rc<RefCell<dyn FnMut(i32)>>>,
 }
 
 impl Clone for ClosureStorage {
@@ -15,16 +16,15 @@ impl ClosureStorage {
         ClosureStorage { callbacks: vec![] }
     }
 
-    pub fn register(&mut self, c: Rc<dyn Fn(i32)>) {
-        self.callbacks.push(c)
-    }
+    // pub fn register(&mut self, c: Rc<dyn Fn(i32)>) {
+    //     self.callbacks.push(c)
+    // }
 
-    pub fn register_generic<'a, FG: Fn(i32) + 'static>(&mut self, c: FG) {
-        // self.callbacks.push(c);
-        self.callbacks.push(Rc::new(c));
+    pub fn register<'a, FG: FnMut(i32) + 'static>(&mut self, c: FG) {
+        self.callbacks.push(Rc::new(RefCell::new(c)));
     }
 
     pub fn call(&mut self, i: i32) {
-        self.callbacks.iter_mut().for_each(|c| c(i))
+        self.callbacks.iter().map(|c| c.borrow_mut()).for_each(|mut c| ( c)(i))
     }
 }

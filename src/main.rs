@@ -57,19 +57,20 @@ fn main() {
 
     cs.call(200);
     {
-        let mut i: Cell<i32> = Cell::new(0);
-        cs.register(Rc::new(move |b| {
-            i.set(i.get() + 1);
-            println!("第三个回调 {} {}", i.get(), b)
-        }));
-        i = Cell::new(0);
-        cs.register_generic(move |b| {
-            i.set(i.get() + 1);
-            println!("第si个回调 {} {}", i.get(), b)
+        let mut i =0;
+        cs.register(move |b| {
+            i = i + 1;
+            println!("第三个回调 {} {}", i, b)
+        });
+        cs.register(move |b| {
+            i = i + 1;
+            println!("第si个回调 {} {}", i, b)
         });
     }
     cs.call(300);
+    cs.call(3000);
     cs.clone().call(400);
+    cs.clone().call(4000);
 }
 
 fn print_digits_in_big_int(int: &BigInteger, pre: String) {
