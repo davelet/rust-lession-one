@@ -27,16 +27,17 @@ pub fn read_files(options: Arc<Options>, channel: SyncSender<String>) {
                 let file = BufReader::new(file);
                 for line in file.lines() {
                     match line {
-                        Ok(line) => {  
+                        Ok(line) => {
                             let send_rs = channel.send(line.clone());
                             match send_rs {
-                                Ok(ok) => {println!("READ send = {} >> {}", i, line);
+                                Ok(ok) => {
+                                    println!("READ send = {} >> {}", i, line);
                                     i += 1
                                 }
-                                Err(err) => {println!("sent line err :{}", err)}
+                                Err(err) => { println!("sent line err :{}", err) }
                             }
                         }
-                        Err(err) => {println!("read line err :{}", err)}
+                        Err(err) => { println!("read line err :{}", err) }
                     }
                 }
             }
@@ -65,7 +66,9 @@ pub fn output_matched_result(options: Arc<Options>, channel: Receiver<String>) {
         }
         OutputMode::SortAndPrint => {
             let mut vec: Vec<String> = channel.iter().collect();
-            vec.sort();
+            let v = &mut vec[..];
+            // vec.sort();
+            sort(&mut vec[..]);
             for (i, line) in vec.iter().enumerate() {
                 println!("{}: {}", i, line)
             }
@@ -75,6 +78,44 @@ pub fn output_matched_result(options: Arc<Options>, channel: Receiver<String>) {
             println!("{} of {}", count, options.patter)
         }
     }
+}
+
+fn sort<T: PartialOrd>(list: &mut [T]) {
+    if list.len() < 2 { return; } // 递归出口
+
+    let mut lpos = 1;
+    let mut rpos = list.len() - 1;
+
+    loop {
+        if lpos > rpos { break; }
+        if list[0] >= list[lpos] {
+            lpos += 1
+        } else if list[0] < list[lpos] {
+            list.swap(lpos, rpos);
+            rpos -= 1;
+        }
+    }
+    list.swap(0, lpos - 1);
+    let parts = list.split_at_mut(lpos);
+    sort(&mut parts.0[..lpos - 1]);
+    sort(parts.1);
+}
+
+#[test]
+fn t() {
+    // let mut v = [5,4,3,2,1,9];
+    let mut v = ["a", "c", "b"];
+    let mut a = v;
+    println!("{}", a[0]);
+    sort(&mut v);
+    println!("{:?}", v);
+    a[0] = "z";
+    println!("{:?}", a);
+    println!("{:?}", v);
+
+    let mut array_of_data: [f64; 5] = [1.0, 3.4, 12.7, -9.12, 0.1];
+    sort(&mut array_of_data[..]);
+    println!("{:?}", array_of_data);
 }
 
 pub fn execute(options: Options) {
@@ -99,9 +140,9 @@ pub fn execute(options: Options) {
 #[test]
 fn test() {
     let o = Options {
-        files: vec![r#"src/main1.rs"#.to_string()],
-        patter: "m".to_string(),
-        mode: OutputMode::CountToPrint,
+        files: vec![r#"src/main.rs"#.to_string()],
+        patter: "".to_string(),
+        mode: OutputMode::SortAndPrint,
     };
     execute(o);
     println!("finished")
