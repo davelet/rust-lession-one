@@ -2,7 +2,8 @@ use std::fmt::{Debug, Display, Formatter, Pointer};
 use std::ptr;
 use crate::linkedlist::double_linked_list::{box_into_raw, raw_into_box};
 
-struct IntList {
+#[derive(Clone)]
+pub struct IntList {
     head: *mut Node,
     tail: *mut Node,
     size: usize,
@@ -23,7 +24,7 @@ impl Display for Node {
 }
 
 impl IntList {
-    fn new() -> Self {
+    pub fn new() -> Self {
         IntList {
             head: ptr::null_mut(),
             tail: ptr::null_mut(),
@@ -31,7 +32,15 @@ impl IntList {
         }
     }
 
-    unsafe fn add_last(&mut self, v: i32) {
+    pub unsafe fn from_iter<I: IntoIterator<Item = i32>>(iter: I) -> Self {
+        let mut l = Self::new();
+        for i in iter {
+            l.add_last(i);
+        }
+        l
+    }
+
+    pub unsafe fn add_last(&mut self, v: i32) {
         let node = Node { data: v, prev: self.tail, next: ptr::null_mut() };
         let raw = box_into_raw(Box::new(node));
         let node = *raw;
@@ -52,7 +61,7 @@ impl IntList {
         println!("added:{}", node);
     }
 
-    fn out_put(&self) {
+    pub fn out_put(&self) {
         match self.size {
             0 => { println!("empty list") }
             _ => unsafe {
@@ -79,7 +88,7 @@ impl IntoIterator for IntList {
     }
 }
 
-struct MyIter {
+pub struct MyIter {
     index: *mut Node,
 }
 

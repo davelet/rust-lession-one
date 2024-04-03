@@ -1,6 +1,6 @@
-use std::marker::PhantomData;
 use std::{mem, ptr};
-use std::fmt::{Display, Formatter};
+use std::fmt::Display;
+use std::marker::PhantomData;
 
 pub struct Node<T> {
     data: T,
